@@ -3,8 +3,8 @@ const oracledb = require('oracledb');
 
 // Set the database connection configuration
 const dbConfig = {
-  user: 's104733',
-  password: 's104733',
+  user: 's102488',
+  password: 'pniziolek56!',
   connectString: '217.173.198.135:1521/tpdb' // Host:Port/ServiceName or Host:Port/SID
 };
 
