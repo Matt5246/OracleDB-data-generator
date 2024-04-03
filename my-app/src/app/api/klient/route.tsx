@@ -10,14 +10,13 @@ const dbConfig = {
 
 export async function GET(req: Request) {
   let connection;
-  let result = undefined;
   try {
     // Get a connection from the pool
     connection = await oracledb.getConnection(dbConfig);
 
     // Define the function to get the IDs of existing rows
     const getExistingIds = async (connection:any) => {
-      const query = 'SELECT id_klient FROM Klient';
+      const query = 'SELECT id_klienta FROM Klient';
       const result = await connection.execute(query);
       return result.rows.map((row:any) => row[0]); // Extract IDs from the result
     };
@@ -33,8 +32,8 @@ export async function GET(req: Request) {
       const city = ['Warszawa', 'Kraków', 'Gdańsk', 'Poznań', 'Wrocław', 'Katowice', 'Szczecin', 'Lublin', 'Białystok', 'Olsztyn'];
       const street = ['Kwiatowa', 'Słoneczna', 'Brzozowa', 'Akacjowa', 'Dębowa', 'Topolowa', 'Świerkowa', 'Lipowa', 'Jesionowa', 'Wiśniowa'];
 
-      const insertSql = `INSERT INTO Klient (id_klient, imie, nazwisko, miejscowosc, kod_pocztowy, ulica, nr_domu, nr_lokalu, nr_telefonu) 
-        VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9)`;
+      const insertSql = `INSERT INTO Klient (id_klienta, imie, nazwisko, adres, numer_telefonu) 
+        VALUES (:1, :2, :3, :4, :5)`;
 
       try {
         const insertPromises = [];
@@ -42,15 +41,11 @@ export async function GET(req: Request) {
         for (let i = 0; i < howMany; i++) {
           const Imie = names[Math.floor(Math.random() * names.length)];
           const Nazwisko = surnames[Math.floor(Math.random() * surnames.length)];
-          const Miejscowosc = city[Math.floor(Math.random() * city.length)];
-          const Kod_pocztowy = postal_codes[Math.floor(Math.random() * postal_codes.length)];
-          const Ulica = street[Math.floor(Math.random() * street.length)];
-          const Numer_domu = Math.floor(Math.random() * 200) + 1;
-          const Numer_mieszkania = Math.floor(Math.random() * 50) + 1;
+          const Adres = `${city[Math.floor(Math.random() * city.length)]}, ul. ${street[Math.floor(Math.random() * street.length)]}`;
           const Numer_telefonu = Math.floor(Math.random() * 900000000) + 100000000;
 
           insertPromises.push(
-            connection.execute(insertSql, [startingId + i, Imie, Nazwisko, Miejscowosc, Kod_pocztowy, Ulica, Numer_domu, Numer_mieszkania, Numer_telefonu])
+            connection.execute(insertSql, [startingId + i, Imie, Nazwisko, Adres, Numer_telefonu])
           );
         }
 
@@ -65,13 +60,12 @@ export async function GET(req: Request) {
         // Rollback the transaction if any insert fails
         await connection.rollback();
         console.error('Error inserting records:', insertError);
-        throw insertError;
+        throw insertError; // Rethrow the error for proper handling
       }
     };
 
+    // Call the insert function with the desired number of records
     await insertRandomKlient(10, connection);
-
-    result = await connection.execute('SELECT * FROM Klient');
   } catch (error) {
     console.error('Error:', error);
   } finally {
@@ -85,5 +79,6 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ data: result?.rows || [] });
+  // Return a response
+  return NextResponse.json({ message: 'Data generation completed.' });
 }
