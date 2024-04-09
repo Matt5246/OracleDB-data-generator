@@ -5,7 +5,7 @@ import { useState } from "react";
 
 const Home = () => {
     const [data, setData] = useState([]) as any[];
-    const routes = ['api/klient', 'api/audiobook', 'api/historia_zamowien', 'api/konta'];
+    const routes = ['api/klient',  'api/historia_zamowien', 'api/konta', 'api/koszyk', 'api/platnosci', 'api/zamowienia', 'api/audiobook',];
         
     const fetch = async (route: string) => {
         await axios.get(`/${route}`)

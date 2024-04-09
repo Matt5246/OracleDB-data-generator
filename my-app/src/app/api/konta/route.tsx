@@ -9,7 +9,7 @@ const dbConfig = {
 };
 
 export async function GET(req: Request) {
-  let connection;
+  let connection:any;
   try {
     // Get a connection from the pool
     connection = await oracledb.getConnection(dbConfig);
@@ -18,22 +18,22 @@ export async function GET(req: Request) {
     const getExistingKlientIds = async () => {
       const query = 'SELECT id_klienta FROM Klient';
       const result = await connection.execute(query);
-      return result.rows.map((row) => row[0]);
+      return result.rows.map((row:any) => row[0]);
     };
     const getExistingKontaIds = async () => {
         const query = 'SELECT id_konta FROM Konta';
         const result = await connection.execute(query);
-        return result.rows.map((row) => row[0]);
+        return result.rows.map((row:any) => row[0]);
       };
     // Function to get existing historia_zamowien IDs
     const getExistingHistoriaZamowienIds = async () => {
       const query = 'SELECT id_historia_z FROM Historia_zamowien';
       const result = await connection.execute(query);
-      return result.rows.map((row) => row[0]);
+      return result.rows.map((row:any) => row[0]);
     };
 
     // Define the insert function to insert random konta data
-    const insertRandomKonta = async (howMany, connection) => {
+    const insertRandomKonta = async (howMany:any, connection:any) => {
       const existingKlientIds = await getExistingKlientIds();
       const existingHistoriaZamowienIds = await getExistingHistoriaZamowienIds();
       const existingIds = await getExistingKontaIds(); // Start ID for new rows

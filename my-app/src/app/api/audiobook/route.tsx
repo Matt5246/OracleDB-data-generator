@@ -25,25 +25,31 @@ export async function GET(req: Request) {
 
       const insertSql = `INSERT INTO audiobooki (id_audio, tytul, dlugosc, intro, cena, wydawnictwo, kategoria, kz_id_zamowienia, koszyk_id_koszyk, kz_konta_id_konta, kz_konta_id_historia_z) 
         VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11)`;
-
+        const getExistingAudiobookIds = async () => {
+            const query = 'SELECT id_audio FROM audiobooki';
+            const result = await connection.execute(query);
+            return result.rows.map((row:any) => row[0]);
+          };
       try {
         const insertPromises = [];
 
         for (let i = 0; i < howMany; i++) {
-          const Tytul = titles[Math.floor(Math.random() * titles.length)];
-          const Dlugosc = lengths[Math.floor(Math.random() * lengths.length)];
-          const Intro = intros[Math.floor(Math.random() * intros.length)];
-          const Cena = prices[Math.floor(Math.random() * prices.length)];
-          const Wydawnictwo = publishers[Math.floor(Math.random() * publishers.length)];
-          const Kategoria = categories[Math.floor(Math.random() * categories.length)];
-          const Kz_id_zamowienia = Math.floor(Math.random() * 100) + 1; // Random value between 1 and 100
-          const Koszyk_id_koszyk = Math.floor(Math.random() * 100) + 1; // Random value between 1 and 100
-          const Kz_konta_id_konta = Math.floor(Math.random() * 100) + 1; // Random value between 1 and 100
-          const Kz_konta_id_historia_z = Math.floor(Math.random() * 100) + 1; // Random value between 1 and 100
+            const existingIds = await getExistingAudiobookIds(); // Start ID for new rows
+            const startingId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+            const Tytul = titles[Math.floor(Math.random() * titles.length)];
+            const Dlugosc = lengths[Math.floor(Math.random() * lengths.length)];
+            const Intro = intros[Math.floor(Math.random() * intros.length)];
+            const Cena = prices[Math.floor(Math.random() * prices.length)];
+            const Wydawnictwo = publishers[Math.floor(Math.random() * publishers.length)];
+            const Kategoria = categories[Math.floor(Math.random() * categories.length)];
+            const Kz_id_zamowienia = Math.floor(Math.random() * 100) + 1; // Random value between 1 and 100
+            const Koszyk_id_koszyk = Math.floor(Math.random() * 100) + 1; // Random value between 1 and 100
+            const Kz_konta_id_konta = Math.floor(Math.random() * 100) + 1; // Random value between 1 and 100
+            const Kz_konta_id_historia_z = Math.floor(Math.random() * 100) + 1; // Random value between 1 and 100
 
-          insertPromises.push(
-            connection.execute(insertSql, [i + 1, Tytul, Dlugosc, Intro, Cena, Wydawnictwo, Kategoria, Kz_id_zamowienia, Koszyk_id_koszyk, Kz_konta_id_konta, Kz_konta_id_historia_z])
-          );
+            insertPromises.push(
+                connection.execute(insertSql, [startingId, Tytul, Dlugosc, Intro, Cena, Wydawnictwo, Kategoria, Kz_id_zamowienia, Koszyk_id_koszyk, Kz_konta_id_konta, Kz_konta_id_historia_z])
+            );
         }
 
         // Execute all insert queries concurrently

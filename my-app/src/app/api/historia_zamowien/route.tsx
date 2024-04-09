@@ -9,7 +9,7 @@ const dbConfig = {
 };
 
 export async function GET(req: Request) {
-  let connection;
+  let connection:any;
   try {
     // Get a connection from the pool
     connection = await oracledb.getConnection(dbConfig);
@@ -21,7 +21,11 @@ export async function GET(req: Request) {
       const randomTime = startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime());
       return new Date(randomTime);
     };
-
+    const getExistingHistoriaZamowienIds = async () => {
+        const query = 'SELECT id_historia_z FROM Historia_zamowien';
+        const result = await connection.execute(query);
+        return result.rows.map((row:any) => row[0]);
+      };
     // Define the insert function to insert random historia_zamowien data
     const insertRandomHistoriaZamowien = async (howMany:any, connection:any) => {
       const insertSql = `INSERT INTO historia_zamowien (id_historia_z, historia_zamowien) VALUES (:1, :2)`;
@@ -30,11 +34,12 @@ export async function GET(req: Request) {
         const insertPromises = [];
 
         for (let i = 0; i < howMany; i++) {
-            const id_historia_z = i + 1; // Assuming IDs start from 1 and increment by 1
+            const existingIds = await getExistingHistoriaZamowienIds(); // Start ID for new rows
+            const startingId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
             const historia_zamowien = getRandomDate(new Date('2000-01-01'), new Date('2023-12-31')); // Generate random date within range
 
             insertPromises.push(
-                connection.execute(insertSql, [id_historia_z, historia_zamowien])
+                connection.execute(insertSql, [startingId, historia_zamowien])
             );
         }
 
