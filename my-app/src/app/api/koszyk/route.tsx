@@ -13,13 +13,17 @@ function generateRandomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export async function GET(req: Request) {
-  let connection;
+export async function POST(req: Request) {
+    if (req.method !== 'POST') {
+        return NextResponse.json(new Error('Method Not Allowed'), { status: 405 });
+    }
+    
+    const { numberOfRows } = await req.json();
+    let connection: any;
   try {
     // Get a connection from the pool
     connection = await oracledb.getConnection(dbConfig);
-
-    // Function to get existing IDs from different tables
+    
     const getExistingIds = async (tableName, idColumnName) => {
       const query = `SELECT ${idColumnName} FROM ${tableName}`;
       const result = await connection.execute(query);
@@ -28,7 +32,7 @@ export async function GET(req: Request) {
 
     // Define the insert function to insert random data into the koszyk table
     const insertRandomKoszykData = async (howMany, connection) => {
-      const existingZamowieniaIds = await getExistingIds('zamówienia', 'id_zamowienia');
+        const existingZamowieniaIds = await getExistingIds('zamówienia', 'id_zamowienia');
       const existingKontaIds = await getExistingIds('konta', 'id_konta');
       const existingHistoriaZamowienIds = await getExistingIds('historia_zamowien', 'id_historia_z');
       const existingKoszykIds = await getExistingIds('koszyk', 'id_koszyk'); // Get existing koszyk IDs
@@ -66,7 +70,7 @@ export async function GET(req: Request) {
     };
 
     // Call the insert function with the desired number of records
-    await insertRandomKoszykData(10, connection);
+    await insertRandomKoszykData(numberOfRows || 10, connection); 
   } catch (error) {
     console.error('Error:', error);
   } finally {
@@ -81,5 +85,5 @@ export async function GET(req: Request) {
   }
 
   // Return a response
-  return NextResponse.json({ message: 'Data generation completed.' });
+return NextResponse.json({ message: `Data generation completed. inserted ${numberOfRows || 10} rows` });
 }

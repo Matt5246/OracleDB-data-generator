@@ -8,21 +8,31 @@ const dbConfig = {
   connectString: '217.173.198.135:1521/tpdb' // Host:Port/ServiceName or Host:Port/SID
 };
 
-export async function GET(req: Request) {
+// Helper function to get the IDs of existing rows
+const getExistingIds = async (connection) => {
+  const query = 'SELECT id_klienta FROM Klient';
+  const result = await connection.execute(query);
+  return result.rows.map((row) => row[0]); // Extract IDs from the result
+};
+
+// Helper function to generate a random number between min and max (inclusive)
+const generateRandomNumber = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+export async function POST(req: Request) {
+  if (req.method !== 'POST') {
+    return NextResponse.json(new Error('Method Not Allowed'), { status: 405 });
+  }
+
+  const { numberOfRows } = await req.json();
   let connection;
   try {
     // Get a connection from the pool
     connection = await oracledb.getConnection(dbConfig);
 
-    // Define the function to get the IDs of existing rows
-    const getExistingIds = async (connection:any) => {
-      const query = 'SELECT id_klienta FROM Klient';
-      const result = await connection.execute(query);
-      return result.rows.map((row:any) => row[0]); // Extract IDs from the result
-    };
-
     // Define the insert function to insert random klient data
-    const insertRandomKlient = async (howMany:any, connection:any) => {
+    const insertRandomKlient = async (howMany, connection) => {
       const existingIds = await getExistingIds(connection);
       const startingId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1; // Calculate starting ID for new rows
 
@@ -65,7 +75,7 @@ export async function GET(req: Request) {
     };
 
     // Call the insert function with the desired number of records
-    await insertRandomKlient(10, connection);
+    await insertRandomKlient(numberOfRows || 10, connection);
   } catch (error) {
     console.error('Error:', error);
   } finally {
@@ -80,5 +90,5 @@ export async function GET(req: Request) {
   }
 
   // Return a response
-  return NextResponse.json({ message: 'Data generation completed.' });
+  return NextResponse.json({ message: `Data generation completed. inserted ${numberOfRows || 10} rows` });
 }

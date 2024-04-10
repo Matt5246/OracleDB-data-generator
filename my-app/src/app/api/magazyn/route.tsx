@@ -30,28 +30,23 @@ export async function POST(req: Request) {
       return result.rows.map((row) => row[0]);
     };
 
-    // Define the insert function to insert random data into the zamówienia table
-    const insertRandomZamowieniaData = async (howMany, connection) => {
-        const existingPlatnosciIds = await getExistingIds('platnosci', 'id_platnosci');
-      const existingKontaIds = await getExistingIds('konta', 'id_konta');
-      const existingHistoriaZamowienIds = await getExistingIds('historia_zamowien', 'id_historia_z');
-      const existingZamowieniaIds = await getExistingIds('zamówienia', 'id_zamowienia'); // Get existing zamówienia IDs
+    // Define the insert function to insert random data into the magazyn table
+    const insertRandomMagazynData = async (howMany, connection) => {
+        const existingMagazynIds = await getExistingIds('magazyn', 'id_magazyn');
 
-      const insertSql = `INSERT INTO zamówienia (id_zamowienia, platnosci_id_platnosci, konta_id_konta, stan_zamowienia, konta_id_historia_z) 
-        VALUES (:1, :2, :3, :4, :5)`;
+      const insertSql = `INSERT INTO magazyn (id_magazyn, adres, dostepnosc) 
+        VALUES (:1, :2, :3)`;
 
       try {
         const insertPromises = [];
 
         for (let i = 0; i < howMany; i++) {
-          const id_zamowienia = existingZamowieniaIds.length > 0 ? Math.max(...existingZamowieniaIds) + i + 1 : i + 1; // Generate new ID
-          const platnosci_id_platnosci = existingPlatnosciIds[Math.floor(Math.random() * existingPlatnosciIds.length)];
-          const konta_id_konta = existingKontaIds[Math.floor(Math.random() * existingKontaIds.length)];
-          const stan_zamowienia = generateRandomNumber(0, 1); // Random stan_zamowienia value
-          const konta_id_historia_z = existingHistoriaZamowienIds[Math.floor(Math.random() * existingHistoriaZamowienIds.length)];
+          const id_magazyn = existingMagazynIds.length > 0 ? Math.max(...existingMagazynIds) + i + 1 : i + 1; // Generate new ID
+          const adres = `Adres ${i+1}`; // Example adres
+          const dostepnosc = generateRandomNumber(0, 100); // Random dostepnosc value (between 0 and 100)
 
           insertPromises.push(
-            connection.execute(insertSql, [id_zamowienia, platnosci_id_platnosci, konta_id_konta, stan_zamowienia, konta_id_historia_z])
+            connection.execute(insertSql, [id_magazyn, adres, dostepnosc])
           );
         }
 
@@ -61,17 +56,17 @@ export async function POST(req: Request) {
         // Commit the transaction
         await connection.commit();
 
-        console.log(`${howMany} records inserted into zamówienia successfully.`);
+        console.log(`${howMany} records inserted into magazyn successfully.`);
       } catch (insertError) {
         // Rollback the transaction if any insert fails
         await connection.rollback();
-        console.error('Error inserting records into zamówienia:', insertError);
+        console.error('Error inserting records into magazyn:', insertError);
         throw insertError; // Rethrow the error for proper handling
       }
     };
 
     // Call the insert function with the desired number of records
-    await insertRandomZamowieniaData(numberOfRows || 10, connection); 
+    await insertRandomMagazynData(numberOfRows || 10, connection); 
   } catch (error) {
     console.error('Error:', error);
   } finally {

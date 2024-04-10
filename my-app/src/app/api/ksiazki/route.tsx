@@ -30,35 +30,38 @@ export async function POST(req: Request) {
       return result.rows.map((row) => row[0]);
     };
 
-    // Define the insert function to insert random data into the audiobooki table
-    const insertRandomAudiobookiData = async (howMany, connection) => {
-        const existingAudioIds = await getExistingIds('audiobooki', 'id_audio');
-      const existingKoszykIds = await getExistingIds('koszyk', 'id_koszyk');
+    // Define the insert function to insert random data into the ksiazki table
+    const insertRandomKsiazkiData = async (howMany, connection) => {
+        const existingKsiazkiIds = await getExistingIds('ksiazki', 'id_ksiazki');
       const existingZamowieniaIds = await getExistingIds('zamówienia', 'id_zamowienia');
       const existingKontaIds = await getExistingIds('konta', 'id_konta');
       const existingHistoriaZamowienIds = await getExistingIds('historia_zamowien', 'id_historia_z');
+      const existingMagazynIds = await getExistingIds('magazyn', 'id_magazyn');
+      const existingKoszykIds = await getExistingIds('koszyk', 'id_koszyk');
 
-      const insertSql = `INSERT INTO audiobooki (id_audio, tytul, dlugosc, intro, cena, wydawnictwo, kategoria, kz_id_zamowienia, koszyk_id_koszyk, kz_konta_id_konta, kz_konta_id_historia_z) 
-        VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11)`;
+      const insertSql = `INSERT INTO ksiazki (id_ksiazki, tytul, liczba_stron, ilosc_sztuk, intro, cena, wydawnictwo, kategoria, kz_id_zamowienia, koszyk_id_koszyk, kz_konta_id_konta, kz_konta_id_historia_z, magazyn_id_magazyn) 
+        VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13)`;
 
       try {
         const insertPromises = [];
 
         for (let i = 0; i < howMany; i++) {
-          const id_audio = existingAudioIds.length > 0 ? Math.max(...existingAudioIds) + i + 1 : i + 1; // Generate new ID
-          const tytul = `Audiobook ${i+1}`; // Example tytul
-          const dlugosc = `${generateRandomNumber(1, 20)}h ${generateRandomNumber(0, 59)}m`; // Random dlugosc value
+          const id_ksiazki = existingKsiazkiIds.length > 0 ? Math.max(...existingKsiazkiIds) + i + 1 : i + 1; // Generate new ID
+          const tytul = `Tytul ${i+1}`; // Example tytul
+          const liczba_stron = generateRandomNumber(100, 500); // Random liczba_stron value (between 100 and 500)
+          const ilosc_sztuk = generateRandomNumber(1, 100); // Random ilosc_sztuk value (between 1 and 100)
           const intro = `Intro ${i+1}`; // Example intro
-          const cena = generateRandomNumber(10, 100); // Random cena value
+          const cena = generateRandomNumber(10, 100); // Random cena value (between 10 and 100)
           const wydawnictwo = `Wydawnictwo ${i+1}`; // Example wydawnictwo
-          const kategoria = `Kategoria ${i+1}`; // Example kategoria
+          const kategoria = Math.random() < 0.5 ? 'Fikcja' : 'Non-Fikcja'; // Random kategoria value
           const kz_id_zamowienia = existingZamowieniaIds[Math.floor(Math.random() * existingZamowieniaIds.length)];
           const koszyk_id_koszyk = existingKoszykIds[Math.floor(Math.random() * existingKoszykIds.length)];
           const kz_konta_id_konta = existingKontaIds[Math.floor(Math.random() * existingKontaIds.length)];
           const kz_konta_id_historia_z = existingHistoriaZamowienIds[Math.floor(Math.random() * existingHistoriaZamowienIds.length)];
+          const magazyn_id_magazyn = existingMagazynIds[Math.floor(Math.random() * existingMagazynIds.length)];
 
           insertPromises.push(
-            connection.execute(insertSql, [id_audio, tytul, dlugosc, intro, cena, wydawnictwo, kategoria, kz_id_zamowienia, koszyk_id_koszyk, kz_konta_id_konta, kz_konta_id_historia_z])
+            connection.execute(insertSql, [id_ksiazki, tytul, liczba_stron, ilosc_sztuk, intro, cena, wydawnictwo, kategoria, kz_id_zamowienia, koszyk_id_koszyk, kz_konta_id_konta, kz_konta_id_historia_z, magazyn_id_magazyn])
           );
         }
 
@@ -68,17 +71,17 @@ export async function POST(req: Request) {
         // Commit the transaction
         await connection.commit();
 
-        console.log(`${howMany} records inserted into audiobooki successfully.`);
+        console.log(`${howMany} records inserted into ksiazki successfully.`);
       } catch (insertError) {
         // Rollback the transaction if any insert fails
         await connection.rollback();
-        console.error('Error inserting records into audiobooki:', insertError);
+        console.error('Error inserting records into ksiazki:', insertError);
         throw insertError; // Rethrow the error for proper handling
       }
     };
 
     // Call the insert function with the desired number of records
-    await insertRandomAudiobookiData(numberOfRows || 10, connection); 
+    await insertRandomKsiazkiData(numberOfRows || 100, connection); 
   } catch (error) {
     console.error('Error:', error);
   } finally {
@@ -93,5 +96,5 @@ export async function POST(req: Request) {
   }
 
   // Return a response
-return NextResponse.json({ message: `Data generation completed. inserted ${numberOfRows || 10} rows` });
+return NextResponse.json({ message: `Data generation completed. inserted ${numberOfRows || 100} rows` });
 }
