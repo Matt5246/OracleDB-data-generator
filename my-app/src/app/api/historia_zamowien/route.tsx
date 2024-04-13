@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { oracledb, dbConfig } from "@/lib/oracle";
+import fs from 'fs';
 
 // Helper function to generate random dates within a range
 const getRandomDate = (start, end) => {
@@ -40,6 +41,7 @@ export async function POST(req: Request) {
 
       try {
         const insertPromises = [];
+        const sqlStatements = [];
 
         for (let i = 0; i < howMany; i++) {
           const id_historia_z = startingId + i;
@@ -48,6 +50,9 @@ export async function POST(req: Request) {
           insertPromises.push(
             connection.execute(insertSql, [id_historia_z, historia_zamowien])
           );
+
+          // Push SQL statement into the array
+          sqlStatements.push(`INSERT INTO Historia_zamowien VALUES (${id_historia_z}, '${historia_zamowien.toISOString()}');`);
         }
 
         // Execute all insert queries concurrently
@@ -55,6 +60,9 @@ export async function POST(req: Request) {
 
         // Commit the transaction
         await connection.commit();
+
+        fs.appendFileSync('src/app/inserts.sql', sqlStatements.join('\n') + '\n');
+        console.log('SQL statements written to inserts.txt');
 
         console.log(`${howMany} records inserted into Historia_zamowien successfully.`);
       } catch (insertError) {

@@ -32,14 +32,14 @@ const Home = () => {
             <div className="mx-10 text-lg" >
                 <h1 className="text-4xl font-bold">Home page oracledb example data fetch symulator</h1>
                 <div className="my-4">
-                    <p>create new database and insert 100 rows of data into all tables</p>
+                    <p>create new database</p>
                     <Button onClick={() => fetch('api/refreshDatabase', 1)} disabled className="mt-4 mr-2">Run</Button>
                 </div>
                 <p>fill all tables with 100 rows of data</p>
                 <Button onClick={runAllRoutes} className="mt-4 mr-2 mb-3">Run All Routes</Button>
-                <p >Fetch the data from database!</p>
+                <p >Fetch the 1000 rows of data to database!</p>
                 {routes.map((route, index) => (
-                    <Button key={index} onClick={() => fetch(route, 100)} className="mt-4 mr-2">
+                    <Button key={index} onClick={() => fetch(route, 1000)} className="mt-4 mr-2">
                         {route.replace('api/', '')}
                     </Button>
                 ))}

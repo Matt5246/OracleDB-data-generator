@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { oracledb, dbConfig } from "@/lib/oracle";
+import fs from 'fs';
 
 // Helper function to generate a random number between min and max (inclusive)
 function generateRandomNumber(min, max) {
@@ -31,10 +32,11 @@ export async function POST(req: Request) {
       const existingZamowieniaIds = await getExistingIds('zamówienia', 'id_zamowienia'); // Get existing zamówienia IDs
 
       const insertSql = `INSERT INTO zamówienia (id_zamowienia, platnosci_id_platnosci, konta_id_konta, stan_zamowienia, konta_id_historia_z) 
-        VALUES (:1, :2, :3, :4, :5)`;
+                VALUES (:1, :2, :3, :4, :5)`;
 
       try {
         const insertPromises = [];
+        const sqlStatements = [];
 
         for (let i = 0; i < howMany; i++) {
           const id_zamowienia = existingZamowieniaIds.length > 0 ? Math.max(...existingZamowieniaIds) + i + 1 : i + 1; // Generate new ID
@@ -46,6 +48,9 @@ export async function POST(req: Request) {
           insertPromises.push(
             connection.execute(insertSql, [id_zamowienia, platnosci_id_platnosci, konta_id_konta, stan_zamowienia, konta_id_historia_z])
           );
+
+          // Push SQL statement into the array
+          sqlStatements.push(`INSERT INTO zamówienia VALUES (${id_zamowienia}, ${platnosci_id_platnosci}, ${konta_id_konta}, ${stan_zamowienia}, ${konta_id_historia_z});`);
         }
 
         // Execute all insert queries concurrently
@@ -53,6 +58,9 @@ export async function POST(req: Request) {
 
         // Commit the transaction
         await connection.commit();
+
+        fs.appendFileSync('src/app/inserts.sql', sqlStatements.join('\n') + '\n');
+        console.log('SQL statements written to inserts.sql');
 
         console.log(`${howMany} records inserted into zamówienia successfully.`);
       } catch (insertError) {

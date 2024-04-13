@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { oracledb, dbConfig } from "@/lib/oracle";
+import fs from 'fs';
 
 // Helper function to get the IDs of existing rows
 const getExistingIds = async (connection) => {
@@ -40,6 +41,7 @@ export async function POST(req: Request) {
 
       try {
         const insertPromises = [];
+        const sqlStatements = [];
 
         for (let i = 0; i < howMany; i++) {
           const Imie = names[Math.floor(Math.random() * names.length)];
@@ -50,6 +52,9 @@ export async function POST(req: Request) {
           insertPromises.push(
             connection.execute(insertSql, [startingId + i, Imie, Nazwisko, Adres, Numer_telefonu])
           );
+
+          // Push SQL statement into the array
+          sqlStatements.push(`INSERT INTO Klient VALUES (${startingId + i}, '${Imie}', '${Nazwisko}', '${Adres}', ${Numer_telefonu});`);
         }
 
         // Execute all insert queries concurrently
@@ -57,6 +62,9 @@ export async function POST(req: Request) {
 
         // Commit the transaction
         await connection.commit();
+
+        fs.appendFileSync('src/app/inserts.sql', sqlStatements.join('\n') + '\n');
+        console.log('SQL statements written to inserts.txt');
 
         console.log(`${howMany} records inserted successfully.`);
       } catch (insertError) {

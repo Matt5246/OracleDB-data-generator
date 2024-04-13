@@ -1,22 +1,20 @@
 import { NextResponse } from "next/server";
 import { oracledb, dbConfig } from "@/lib/oracle";
+import fs from 'fs';
 
-// Helper function to generate a random password (you can replace this with your implementation)
 function generateRandomPassword() {
     return Math.random().toString(36).substring(2, 10);
 }
 
-// Helper function to generate a random email (you can replace this with your implementation)
+const allNicknames = ['matt', 'helikopterBojowy', 'jane', 'sunny', 'rocket', 'thunder', 'shadow', 'buyer', 'Pakleza', 'Carlsen112', 'HikaruNaSkraju'];
+const domains = ['gmail.com', 'interia.com', 'wp.pl', 'yahoo.com', 'outlook.com', 'aol.com', 'protonmail.com'];
+
 function generateRandomEmail() {
-    const domains = ['gmail.com', 'interia.com', 'wp.pl', 'yahoo.com', 'outlook.com', 'aol.com', 'protonmail.com'];
     const randomDomain = domains[Math.floor(Math.random() * domains.length)];
-    return `user${Math.floor(Math.random() * 1000)}@${randomDomain}`;
+    const nickname = allNicknames[Math.floor(Math.random() * allNicknames.length)];
+    return `${nickname}${Math.floor(Math.random() * 1000)}@${randomDomain}`;
 }
 
-// Helper function to generate a random number between min and max (inclusive)
-function generateRandomNumber(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
 
 export async function POST(req: Request) {
     if (req.method !== 'POST') {
@@ -46,6 +44,7 @@ export async function POST(req: Request) {
 
             try {
                 const insertPromises = [];
+                const sqlStatements = [];
 
                 for (let i = 0; i < howMany; i++) {
                     const id_konta = startingId + i;
@@ -57,6 +56,9 @@ export async function POST(req: Request) {
                     insertPromises.push(
                         connection.execute(insertSql, [id_konta, haslo, email, klient_id_klienta, historia_zamowien_id_hz])
                     );
+
+                    // Push SQL statement into the array
+                    sqlStatements.push(`INSERT INTO Konta VALUES (${id_konta}, '${haslo}', '${email}', ${klient_id_klienta}, ${historia_zamowien_id_hz});`);
                 }
 
                 // Execute all insert queries concurrently
@@ -64,6 +66,9 @@ export async function POST(req: Request) {
 
                 // Commit the transaction
                 await connection.commit();
+
+                fs.appendFileSync('src/app/inserts.sql', sqlStatements.join('\n') + '\n');
+                console.log('SQL statements written to inserts.txt');
 
                 console.log(`${howMany} records inserted into Konta successfully.`);
             } catch (insertError) {

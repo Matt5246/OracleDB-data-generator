@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { oracledb, dbConfig } from "@/lib/oracle";
+import fs from 'fs';
+
 // Helper function to generate a random number between min and max (inclusive)
 function generateRandomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -30,10 +32,11 @@ export async function POST(req: Request) {
       const existingKoszykIds = await getExistingIds('koszyk', 'id_koszyk'); // Get existing koszyk IDs
 
       const insertSql = `INSERT INTO koszyk (id_koszyk, zamówienia_id_zamowienia, zamówienia_konta_id_konta, zamówienia_konta_id_historia_z) 
-        VALUES (:1, :2, :3, :4)`;
+                VALUES (:1, :2, :3, :4)`;
 
       try {
         const insertPromises = [];
+        const sqlStatements = [];
 
         for (let i = 0; i < howMany; i++) {
           const id_koszyk = existingKoszykIds.length > 0 ? Math.max(...existingKoszykIds) + i + 1 : i + 1; // Generate new ID
@@ -44,6 +47,9 @@ export async function POST(req: Request) {
           insertPromises.push(
             connection.execute(insertSql, [id_koszyk, zamówienia_id_zamowienia, zamówienia_konta_id_konta, zamówienia_konta_id_historia_z])
           );
+
+          // Push SQL statement into the array
+          sqlStatements.push(`INSERT INTO koszyk VALUES (${id_koszyk}, ${zamówienia_id_zamowienia}, ${zamówienia_konta_id_konta}, ${zamówienia_konta_id_historia_z});`);
         }
 
         // Execute all insert queries concurrently
@@ -51,6 +57,9 @@ export async function POST(req: Request) {
 
         // Commit the transaction
         await connection.commit();
+
+        fs.appendFileSync('src/app/inserts.sql', sqlStatements.join('\n') + '\n');
+        console.log('SQL statements written to inserts.txt');
 
         console.log(`${howMany} records inserted into koszyk successfully.`);
       } catch (insertError) {

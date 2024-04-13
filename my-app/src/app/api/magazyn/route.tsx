@@ -1,5 +1,30 @@
 import { NextResponse } from "next/server";
 import { oracledb, dbConfig } from "@/lib/oracle";
+import fs from 'fs';
+
+// Array of example addresses
+const addresses = [
+  "123 Main Street",
+  "456 Elm Street",
+  "789 Oak Street",
+  "321 Maple Avenue",
+  "654 Pine Street",
+  "Prószkowska 12",
+  "Niemodlińska 8",
+  "Kościuszki 3",
+  "Ozimska 18",
+  "Krasickiego 5",
+  "Słowackiego 7",
+  "Krakowska 4",
+  "Wrocławska 1",
+  "Opolska 9",
+  "Kopernika 6",
+  "Kościelna 2",
+  "Sienkiewicza 10",
+  "Piastowska 11",
+  "Sikorskiego 13",
+  "Katowicka 15",
+];
 
 // Helper function to generate a random number between min and max (inclusive)
 function generateRandomNumber(min, max) {
@@ -28,19 +53,23 @@ export async function POST(req: Request) {
       const existingMagazynIds = await getExistingIds('magazyn', 'id_magazyn');
 
       const insertSql = `INSERT INTO magazyn (id_magazyn, adres, dostepnosc) 
-        VALUES (:1, :2, :3)`;
+                    VALUES (:1, :2, :3)`;
 
       try {
         const insertPromises = [];
+        const sqlStatements = [];
 
         for (let i = 0; i < howMany; i++) {
           const id_magazyn = existingMagazynIds.length > 0 ? Math.max(...existingMagazynIds) + i + 1 : i + 1; // Generate new ID
-          const adres = `Adres ${i + 1}`; // Example adres
+          const adres = addresses[Math.floor(Math.random() * addresses.length)]; // Select random address from the array
           const dostepnosc = generateRandomNumber(0, 100); // Random dostepnosc value (between 0 and 100)
 
           insertPromises.push(
             connection.execute(insertSql, [id_magazyn, adres, dostepnosc])
           );
+
+          // Push SQL statement into the array
+          sqlStatements.push(`INSERT INTO magazyn VALUES (${id_magazyn}, '${adres}', ${dostepnosc});`);
         }
 
         // Execute all insert queries concurrently
@@ -48,6 +77,9 @@ export async function POST(req: Request) {
 
         // Commit the transaction
         await connection.commit();
+
+        fs.appendFileSync('src/app/inserts.sql', sqlStatements.join('\n') + '\n');
+        console.log('SQL statements written to inserts.sql');
 
         console.log(`${howMany} records inserted into magazyn successfully.`);
       } catch (insertError) {
