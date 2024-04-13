@@ -1,18 +1,11 @@
 import { NextResponse } from "next/server";
-const oracledb = require('oracledb');
-
-// Set the database connection configuration
-const dbConfig = {
-  user: 's102488',
-  password: 'pniziolek56!',
-  connectString: '217.173.198.135:1521/tpdb' // Host:Port/ServiceName or Host:Port/SID
-};
+import { oracledb, dbConfig } from "@/lib/oracle";
 
 // Helper function to generate a random password (you can replace this with your implementation)
 function generateRandomPassword() {
     return Math.random().toString(36).substring(2, 10);
 }
-  
+
 // Helper function to generate a random email (you can replace this with your implementation)
 function generateRandomEmail() {
     const domains = ['gmail.com', 'interia.com', 'wp.pl', 'yahoo.com', 'outlook.com', 'aol.com', 'protonmail.com'];
@@ -29,13 +22,13 @@ export async function POST(req: Request) {
     if (req.method !== 'POST') {
         return NextResponse.json(new Error('Method Not Allowed'), { status: 405 });
     }
-    
+
     const { numberOfRows } = await req.json();
     let connection;
     try {
         // Get a connection from the pool
         connection = await oracledb.getConnection(dbConfig);
-        
+
         const getExistingIds = async (tableName, idColumnName) => {
             const query = `SELECT ${idColumnName} FROM ${tableName}`;
             const result = await connection.execute(query);
@@ -47,7 +40,7 @@ export async function POST(req: Request) {
             const existingKlientIds = await getExistingIds('Klient', 'id_klienta');
             const existingHistoriaZamowienIds = await getExistingIds('Historia_zamowien', 'id_historia_z');
             const existingIds = await getExistingIds('Konta', 'id_konta'); // Start ID for new rows
-            const startingId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1; 
+            const startingId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
             const insertSql = `INSERT INTO Konta (id_konta, haslo, email, klient_id_klienta, historia_zamowien_id_hz) 
                 VALUES (:1, :2, :3, :4, :5)`;
 
@@ -82,7 +75,7 @@ export async function POST(req: Request) {
         };
 
         // Call the insert function with the desired number of records
-        await insertRandomKontaData(numberOfRows || 100, connection); 
+        await insertRandomKontaData(numberOfRows || 100, connection);
     } catch (error) {
         console.error('Error:', error);
     } finally {

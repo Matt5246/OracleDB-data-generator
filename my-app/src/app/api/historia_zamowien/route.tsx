@@ -1,12 +1,5 @@
 import { NextResponse } from "next/server";
-const oracledb = require('oracledb');
-
-// Set the database connection configuration
-const dbConfig = {
-  user: 's102488',
-  password: 'pniziolek56!',
-  connectString: '217.173.198.135:1521/tpdb' // Host:Port/ServiceName or Host:Port/SID
-};
+import { oracledb, dbConfig } from "@/lib/oracle";
 
 // Helper function to generate random dates within a range
 const getRandomDate = (start, end) => {

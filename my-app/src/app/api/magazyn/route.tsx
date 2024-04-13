@@ -1,12 +1,5 @@
 import { NextResponse } from "next/server";
-const oracledb = require('oracledb');
-
-// Set the database connection configuration
-const dbConfig = {
-  user: 's102488',
-  password: 'pniziolek56!',
-  connectString: '217.173.198.135:1521/tpdb' // Host:Port/ServiceName or Host:Port/SID
-};
+import { oracledb, dbConfig } from "@/lib/oracle";
 
 // Helper function to generate a random number between min and max (inclusive)
 function generateRandomNumber(min, max) {
@@ -14,16 +7,16 @@ function generateRandomNumber(min, max) {
 }
 
 export async function POST(req: Request) {
-    if (req.method !== 'POST') {
-        return NextResponse.json(new Error('Method Not Allowed'), { status: 405 });
-    }
-    
-    const { numberOfRows } = await req.json();
-    let connection: any;
+  if (req.method !== 'POST') {
+    return NextResponse.json(new Error('Method Not Allowed'), { status: 405 });
+  }
+
+  const { numberOfRows } = await req.json();
+  let connection: any;
   try {
     // Get a connection from the pool
     connection = await oracledb.getConnection(dbConfig);
-    
+
     const getExistingIds = async (tableName, idColumnName) => {
       const query = `SELECT ${idColumnName} FROM ${tableName}`;
       const result = await connection.execute(query);
@@ -32,7 +25,7 @@ export async function POST(req: Request) {
 
     // Define the insert function to insert random data into the magazyn table
     const insertRandomMagazynData = async (howMany, connection) => {
-        const existingMagazynIds = await getExistingIds('magazyn', 'id_magazyn');
+      const existingMagazynIds = await getExistingIds('magazyn', 'id_magazyn');
 
       const insertSql = `INSERT INTO magazyn (id_magazyn, adres, dostepnosc) 
         VALUES (:1, :2, :3)`;
@@ -42,7 +35,7 @@ export async function POST(req: Request) {
 
         for (let i = 0; i < howMany; i++) {
           const id_magazyn = existingMagazynIds.length > 0 ? Math.max(...existingMagazynIds) + i + 1 : i + 1; // Generate new ID
-          const adres = `Adres ${i+1}`; // Example adres
+          const adres = `Adres ${i + 1}`; // Example adres
           const dostepnosc = generateRandomNumber(0, 100); // Random dostepnosc value (between 0 and 100)
 
           insertPromises.push(
@@ -66,7 +59,7 @@ export async function POST(req: Request) {
     };
 
     // Call the insert function with the desired number of records
-    await insertRandomMagazynData(numberOfRows || 10, connection); 
+    await insertRandomMagazynData(numberOfRows || 10, connection);
   } catch (error) {
     console.error('Error:', error);
   } finally {
@@ -81,5 +74,5 @@ export async function POST(req: Request) {
   }
 
   // Return a response
-return NextResponse.json({ message: `Data generation completed. inserted ${numberOfRows || 10} rows` });
+  return NextResponse.json({ message: `Data generation completed. inserted ${numberOfRows || 10} rows` });
 }

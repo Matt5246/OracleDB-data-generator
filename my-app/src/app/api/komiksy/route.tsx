@@ -1,13 +1,6 @@
 import { NextResponse } from "next/server";
-const oracledb = require('oracledb');
+import { oracledb, dbConfig } from "@/lib/oracle";
 
-// Set the database connection configuration
-const dbConfig = {
-    user: 's102488',
-    password: 'pniziolek56!',
-    connectString: '217.173.198.135:1521/tpdb' // Host:Port/ServiceName or Host:Port/SID
-  };
-  
 
 // Helper function to generate a random number between min and max (inclusive)
 function generateRandomNumber(min, max) {
@@ -15,16 +8,16 @@ function generateRandomNumber(min, max) {
 }
 
 export async function POST(req: Request) {
-    if (req.method !== 'POST') {
-        return NextResponse.json(new Error('Method Not Allowed'), { status: 405 });
-    }
-    
-    const { numberOfRows } = await req.json();
-    let connection: any;
+  if (req.method !== 'POST') {
+    return NextResponse.json(new Error('Method Not Allowed'), { status: 405 });
+  }
+
+  const { numberOfRows } = await req.json();
+  let connection: any;
   try {
     // Get a connection from the pool
     connection = await oracledb.getConnection(dbConfig);
-    
+
     const getExistingIds = async (tableName, idColumnName) => {
       const query = `SELECT ${idColumnName} FROM ${tableName}`;
       const result = await connection.execute(query);
@@ -33,7 +26,7 @@ export async function POST(req: Request) {
 
     // Define the insert function to insert random data into the komiksy table
     const insertRandomKomiksyData = async (howMany, connection) => {
-        const existingKomiksyIds = await getExistingIds('komiksy', 'id_komiksu');
+      const existingKomiksyIds = await getExistingIds('komiksy', 'id_komiksu');
       const existingZamowieniaIds = await getExistingIds('zamówienia', 'id_zamowienia');
       const existingKontaIds = await getExistingIds('konta', 'id_konta');
       const existingHistoriaZamowienIds = await getExistingIds('historia_zamowien', 'id_historia_z');
@@ -61,7 +54,7 @@ export async function POST(req: Request) {
 
         for (let i = 0; i < howMany; i++) {
           const id_komiksu = existingKomiksyIds.length > 0 ? Math.max(...existingKomiksyIds) + i + 1 : i + 1; // Generate new ID
-          
+
           const tytul = titles[Math.floor(Math.random() * titles.length)];
           const intro = intros[Math.floor(Math.random() * intros.length)];
           const cena = generateRandomNumber(5, 50); // Random cena value (between 5 and 50)
@@ -96,7 +89,7 @@ export async function POST(req: Request) {
     };
 
     // Call the insert function with the desired number of records
-    await insertRandomKomiksyData(numberOfRows || 10, connection); 
+    await insertRandomKomiksyData(numberOfRows || 10, connection);
   } catch (error) {
     console.error('Error:', error);
   } finally {
@@ -111,5 +104,5 @@ export async function POST(req: Request) {
   }
 
   // Return a response
-return NextResponse.json({ message: `Data generation completed. inserted ${numberOfRows || 10} rows` });
+  return NextResponse.json({ message: `Data generation completed. inserted ${numberOfRows || 10} rows` });
 }

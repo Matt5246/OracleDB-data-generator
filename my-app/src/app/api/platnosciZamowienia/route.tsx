@@ -1,19 +1,15 @@
 import { NextResponse } from "next/server";
-const oracledb = require('oracledb');
-
-// Set the database connection configuration
-const dbConfig = {
-  user: 's102488',
-  password: 'pniziolek56!',
-  connectString: '217.173.198.135:1521/tpdb' // Host:Port/ServiceName or Host:Port/SID
-};
+import { oracledb, dbConfig } from "@/lib/oracle";
 
 // Helper function to generate a random number between min and max (inclusive)
 function generateRandomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export async function GET(req: Request) {
+export async function POST(req: Request) {
+  if (req.method !== 'POST') {
+    return NextResponse.json(new Error('Method Not Allowed'), { status: 405 });
+  }
   let connection;
   try {
     // Get a connection from the pool
@@ -38,7 +34,7 @@ export async function GET(req: Request) {
           const rodzaj_platnosci = Math.random() < 0.5 ? 'blik' : 'przelew'; // Random rodzaj_platnosci value
           const czy_oplacone = Math.random() < 0.8 ? 1 : 0; // Random czy_oplacone value (80% chance of being 1)
           const stan_zamowienia = generateRandomNumber(0, 2); // Random stan_zamowienia value (0, 1, or 2)
-          
+
           insertPromises.push(
             connection.execute(insertPlatnosciSql, [id_platnosci, suma, data_platnosci, rodzaj_platnosci, czy_oplacone, id_zamowienia, 1, 1]), // Replace 1 with appropriate konta_id_konta and konta_id_historia_z values
             connection.execute(insertZamowieniaSql, [id_zamowienia, id_platnosci, 1, stan_zamowienia, 1]) // Replace 1 with appropriate platnosci_id_platnosci value

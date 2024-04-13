@@ -1,29 +1,21 @@
 import { NextResponse } from "next/server";
-const oracledb = require('oracledb');
-
-// Set the database connection configuration
-const dbConfig = {
-  user: 's102488',
-  password: 'pniziolek56!',
-  connectString: '217.173.198.135:1521/tpdb' // Host:Port/ServiceName or Host:Port/SID
-};
-
+import { oracledb, dbConfig } from "@/lib/oracle";
 // Helper function to generate a random number between min and max (inclusive)
 function generateRandomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 export async function POST(req: Request) {
-    if (req.method !== 'POST') {
-        return NextResponse.json(new Error('Method Not Allowed'), { status: 405 });
-    }
-    
-    const { numberOfRows } = await req.json();
-    let connection: any;
+  if (req.method !== 'POST') {
+    return NextResponse.json(new Error('Method Not Allowed'), { status: 405 });
+  }
+
+  const { numberOfRows } = await req.json();
+  let connection: any;
   try {
     // Get a connection from the pool
     connection = await oracledb.getConnection(dbConfig);
-    
+
     const getExistingIds = async (tableName, idColumnName) => {
       const query = `SELECT ${idColumnName} FROM ${tableName}`;
       const result = await connection.execute(query);
@@ -32,7 +24,7 @@ export async function POST(req: Request) {
 
     // Define the insert function to insert random data into the ksiazki table
     const insertRandomKsiazkiData = async (howMany, connection) => {
-        const existingKsiazkiIds = await getExistingIds('ksiazki', 'id_ksiazki');
+      const existingKsiazkiIds = await getExistingIds('ksiazki', 'id_ksiazki');
       const existingZamowieniaIds = await getExistingIds('zamówienia', 'id_zamowienia');
       const existingKontaIds = await getExistingIds('konta', 'id_konta');
       const existingHistoriaZamowienIds = await getExistingIds('historia_zamowien', 'id_historia_z');
@@ -47,12 +39,12 @@ export async function POST(req: Request) {
 
         for (let i = 0; i < howMany; i++) {
           const id_ksiazki = existingKsiazkiIds.length > 0 ? Math.max(...existingKsiazkiIds) + i + 1 : i + 1; // Generate new ID
-          const tytul = `Tytul ${i+1}`; // Example tytul
+          const tytul = `Tytul ${i + 1}`; // Example tytul
           const liczba_stron = generateRandomNumber(100, 500); // Random liczba_stron value (between 100 and 500)
           const ilosc_sztuk = generateRandomNumber(1, 100); // Random ilosc_sztuk value (between 1 and 100)
-          const intro = `Intro ${i+1}`; // Example intro
+          const intro = `Intro ${i + 1}`; // Example intro
           const cena = generateRandomNumber(10, 100); // Random cena value (between 10 and 100)
-          const wydawnictwo = `Wydawnictwo ${i+1}`; // Example wydawnictwo
+          const wydawnictwo = `Wydawnictwo ${i + 1}`; // Example wydawnictwo
           const kategoria = Math.random() < 0.5 ? 'Fikcja' : 'Non-Fikcja'; // Random kategoria value
           const kz_id_zamowienia = existingZamowieniaIds[Math.floor(Math.random() * existingZamowieniaIds.length)];
           const koszyk_id_koszyk = existingKoszykIds[Math.floor(Math.random() * existingKoszykIds.length)];
@@ -81,7 +73,7 @@ export async function POST(req: Request) {
     };
 
     // Call the insert function with the desired number of records
-    await insertRandomKsiazkiData(numberOfRows || 100, connection); 
+    await insertRandomKsiazkiData(numberOfRows || 100, connection);
   } catch (error) {
     console.error('Error:', error);
   } finally {
@@ -96,5 +88,5 @@ export async function POST(req: Request) {
   }
 
   // Return a response
-return NextResponse.json({ message: `Data generation completed. inserted ${numberOfRows || 100} rows` });
+  return NextResponse.json({ message: `Data generation completed. inserted ${numberOfRows || 100} rows` });
 }

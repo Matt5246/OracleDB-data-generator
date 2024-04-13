@@ -1,13 +1,5 @@
 import { NextResponse } from "next/server";
-const oracledb = require('oracledb');
-
-// Set the database connection configuration
-const dbConfig = {
-  user: 's102488',
-  password: 'pniziolek56!',
-  connectString: '217.173.198.135:1521/tpdb' // Host:Port/ServiceName or Host:Port/SID
-};
-
+import { oracledb, dbConfig } from "@/lib/oracle";
 // Create an async function to handle database operations
 export async function GET(req: Request) {
   let connection;
@@ -25,7 +17,7 @@ export async function GET(req: Request) {
     `);
     console.log('Table created successfully.');
 
-    
+
     const insertSql = `INSERT INTO example_table (id, name) VALUES (:id, :name)`;
     const binds = [
       { id: 1, name: 'John Doe' },
@@ -36,29 +28,29 @@ export async function GET(req: Request) {
     result = await connection.execute(
       `SELECT table_name FROM user_tables WHERE table_name = 'EXAMPLE_TABLE'`
     );
-    
-    console.log(result.rows); 
+
+    console.log(result.rows);
     if (result.rows.length > 0) {
-        console.log('Table exists:', result.rows[0][0]);
-      } else {
-        console.log('Table does not exist.');
-      }
-  
-      await connection.execute('DROP TABLE example_table');
-      console.log('Table deleted successfully.');
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      if (connection) {
-        try {
-          await connection.close();
-          console.log('Database connection closed.');
-        } catch (closeError) {
-          console.error('Error closing connection:', closeError);
-        }
+      console.log('Table exists:', result.rows[0][0]);
+    } else {
+      console.log('Table does not exist.');
+    }
+
+    await connection.execute('DROP TABLE example_table');
+    console.log('Table deleted successfully.');
+  } catch (error) {
+    console.error('Error:', error);
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+        console.log('Database connection closed.');
+      } catch (closeError) {
+        console.error('Error closing connection:', closeError);
       }
     }
-    return NextResponse.json({ message: result });
+  }
+  return NextResponse.json({ message: result });
 }
 
 
