@@ -11,6 +11,7 @@ export async function POST(req: Request) {
   if (req.method !== 'POST') {
     return NextResponse.json(new Error('Method Not Allowed'), { status: 405 });
   }
+  const { numberOfRows } = await req.json();
   let connection;
   try {
     // Get a connection from the pool
@@ -76,7 +77,7 @@ export async function POST(req: Request) {
     };
 
     // Call the insert function with the desired number of records
-    await insertRandomData(100, connection); // Replace 10 with the desired number of records
+    await insertRandomData(numberOfRows, connection); // Replace 10 with the desired number of records
   } catch (error) {
     console.error('Error:', error);
   } finally {
