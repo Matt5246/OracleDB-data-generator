@@ -29,18 +29,20 @@ const Home = () => {
         }
     }
     return (
-        <div className="flex my-16 h-screen ">
+        <div className="flex my-16 h-full ">
             <div className="mx-10 text-lg" >
                 <h1 className="text-4xl font-bold">Home page oracledb example data fetch symulator</h1>
+                
+                <p className="my-4">Pick the number of rows</p>
+                <Input type="number" className="w-[150px]" value={rows} onChange={(e) => setRows(parseInt(e.target.value))} />
+                
                 <div className="my-4">
                     <p>create new database</p>
                     <Button onClick={() => fetch('api/refreshDatabase', 1)} disabled className="mt-4 mr-2">Run</Button>
                 </div>
                 <p>fill all tables</p>
-                <Input type="number" value={rows} onChange={(e) => setRows(parseInt(e.target.value))} />
-                
                 <Button onClick={runAllRoutes} className="mt-4 mr-2 mb-3">Run All Routes</Button>
-                <p >Fetch the 1000 rows of data to database!</p>
+                <p >Fetch the rows to database!</p>
                 {routes.map((route, index) => (
                     <Button key={index} onClick={() => fetch(route, rows)} className="mt-4 mr-2">
                         {route.replace('api/', '')}
