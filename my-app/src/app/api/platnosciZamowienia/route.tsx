@@ -27,7 +27,8 @@ export async function POST(req: Request) {
     const insertRandomData = async (howMany, connection) => {
       const existingPlatnosciIds = await getExistingIds('platnosci', 'id_platnosci');
       const existingZamowieniaIds = await getExistingIds('zamówienia', 'id_zamowienia');
-
+      const existingKontaIds = await getExistingIds('konta', 'id_konta');
+      const existingHistoriaZamowienIds = await getExistingIds('historia_zamowien', 'id_historia_z');
       const insertPlatnosciSql = `INSERT INTO platnosci (id_platnosci, suma, "Data-platnosci", rodzaj_platnosci, czy_oplacone, zamówienia_id_zamowienia, zamówienia_konta_id_konta, zamówienia_konta_id_historia_z) 
                         VALUES (:1, :2, :3, :4, :5, :6, :7, :8)`;
 
@@ -42,6 +43,8 @@ export async function POST(req: Request) {
         for (let i = 0; i < howMany; i++) {
           const id_platnosci = existingPlatnosciIds.length > 0 ? Math.max(...existingPlatnosciIds) + i + 1 : i + 1; // Generate new platnosci ID
           const id_zamowienia = existingZamowieniaIds.length > 0 ? Math.max(...existingZamowieniaIds) + i + 1 : i + 1; // Generate new zamowienia ID
+          const id_konta = existingKontaIds[Math.floor(Math.random() * existingKontaIds.length)]; // Random konta_id_konta value
+          const id_historia_z = existingHistoriaZamowienIds[Math.floor(Math.random() * existingHistoriaZamowienIds.length)]; // Random konta_id_historia_z value
           const suma = generateRandomNumber(10, 1000); // Random suma value
           const data_platnosci = new Date(); // Current date
           const rodzaj_platnosci = rodzajPlatnosciArray[Math.floor(Math.random() * rodzajPlatnosciArray.length)];
@@ -50,12 +53,12 @@ export async function POST(req: Request) {
 
           insertPromises.push(
             connection.execute(insertPlatnosciSql, [id_platnosci, suma, data_platnosci, rodzaj_platnosci, czy_oplacone, id_zamowienia, 1, 1]), // Replace 1 with appropriate konta_id_konta and konta_id_historia_z values
-            connection.execute(insertZamowieniaSql, [id_zamowienia, id_platnosci, 1, stan_zamowienia, 1]) // Replace 1 with appropriate platnosci_id_platnosci value
+            connection.execute(insertZamowieniaSql, [id_zamowienia, id_platnosci, id_konta, stan_zamowienia, id_historia_z]) // Replace 1 with appropriate platnosci_id_platnosci value
           );
 
           // Push SQL statements into the array
           sqlStatements.push(`INSERT INTO platnosci VALUES (${id_platnosci}, ${suma}, TO_DATE('${data_platnosci.toISOString().slice(0, 19).replace('T', ' ')}', 'YYYY-MM-DD HH24:MI:SS'), '${rodzaj_platnosci}', ${czy_oplacone}, ${id_zamowienia}, 1, 1);`);
-          sqlStatements.push(`INSERT INTO zamówienia VALUES (${id_zamowienia}, ${id_platnosci}, 1, ${stan_zamowienia}, 1);`);
+          sqlStatements.push(`INSERT INTO zamówienia VALUES (${id_zamowienia}, ${id_platnosci}, ${id_konta}, ${stan_zamowienia}, ${id_historia_z});`);
         }
 
         // Execute all insert queries concurrently

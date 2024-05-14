@@ -141,7 +141,7 @@ ALTER TABLE klient ADD CONSTRAINT klient_pk PRIMARY KEY ( id_klienta );
 ALTER TABLE komiksy ADD CONSTRAINT komiksy_pk PRIMARY KEY ( id_komiksu );
 ALTER TABLE konta ADD CONSTRAINT konta_pk PRIMARY KEY ( id_konta );
 ALTER TABLE platnosci ADD CONSTRAINT platnosci_pk PRIMARY KEY ( id_platnosci );
---ALTER TABLE koszyk ADD CONSTRAINT koszyk_pk PRIMARY KEY ( id_koszyk );
+ALTER TABLE koszyk ADD CONSTRAINT koszyk_pk PRIMARY KEY ( id_koszyk );
 ALTER TABLE ksiazki ADD CONSTRAINT ksiazki_pk PRIMARY KEY ( id_ksiazki );
 ALTER TABLE magazyn ADD CONSTRAINT magazyn_pk PRIMARY KEY ( id_magazyn );
 ALTER TABLE audiobooki
