@@ -6,7 +6,9 @@ import fs from 'fs';
 function generateRandomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
+function generateRandomDate(start, end) {
+  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+}
 export async function POST(req: Request) {
   if (req.method !== 'POST') {
     return NextResponse.json(new Error('Method Not Allowed'), { status: 405 });
@@ -44,7 +46,7 @@ export async function POST(req: Request) {
         for (let i = 0; i < howMany; i++) {
           const id_platnosci = existingPlatnosciIds.length > 0 ? Math.max(...existingPlatnosciIds) + i + 1 : i + 1; // Generate new ID
           const suma = generateRandomNumber(10, 1000); // Random suma value
-          const data_platnosci = new Date(); // Current date
+          const data_platnosci = generateRandomDate(new Date(2010, 0, 1), new Date()); // Random date between Jan 1, 2020, and today
           const rodzaj_platnosci = rodzajPlatnosciArray[Math.floor(Math.random() * rodzajPlatnosciArray.length)]; // Random rodzaj_platnosci value from the array
           const czy_oplacone = Math.random() < 0.8 ? 1 : 0; // Random czy_oplacone value (80% chance of being 1)
           const zamówienia_id_zamowienia = existingZamowieniaIds[Math.floor(Math.random() * existingZamowieniaIds.length)];
